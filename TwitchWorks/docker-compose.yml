@@ -1,0 +1,36 @@
+# This docker-compose file shows an example of making TwitchWorks compatible
+# with HTTPS. It supports both creating self-signed certificates, as well as
+# fetching new certificates using Let's Encrypt.
+# Heavily based around https-portal, which you can read more about here:
+# https://hub.docker.com/r/steveltn/https-portal
+version: '3.1'
+
+services:
+  # External tool to aid in proxying the TwitchWorks app to HTTPS. May not be
+  # required when terminating HTTPS elsewhere.
+  https-portal:
+      image: steveltn/https-portal:1
+      ports:
+        - '80:80'
+        - '443:443'
+      links:
+        - twitchworks
+      restart: always
+      environment:
+        DOMAINS: 'MY.COOL.DOMAIN -> http://twitchworks:80'
+        STAGE: 'local' ## Local -> will create a self-signed certificate
+        # Uncomment the following line and comment out the previous line in case
+        # you would like to retrieve "production" certificates (make sure you
+        # have your domain pointing at the server before doing this)
+        # STAGE: 'production'
+
+        # NOTE: On Chrome on Mac, you might need to select the page and type
+        # "thisisunsafe" (without quotation marks; there isn't a textbox,
+        # just make sure the page is selected by clicking in the middle of it).
+        # This is simply the way Chrome works, so unless you're using your own
+        # domain, there isn't a whole lot we can do to bypass the issue
+
+  twitchworks:
+    image: twitchworks-integrated
+    build: '.'
+    restart: always
